@@ -9,7 +9,22 @@ Repositório para a disciplina de Projeto Integrador I de Sistemas de Informaç�
 
 #### Integrantes
 
-* Bruno Eris
-* Allan Denis
-* Hercilio Junior
-* Ademar Neto
+* Bruno Eris (FRONT-END/DESIGNER)
+* Allan Denis (DBA)
+* Hercilio Junior (API)
+* Ademar Neto (DESIGNER)
+
+#### Instalação 1
+
+1. Clone este repositório.
+2. Acesse com apache.
+
+#### Instalação npm
+
+1. Clone este repositório.
+2. cd até o diretório.
+3. npm install
+4. gulp
+
+* OBS: View da tela login.php provisoriamente somente acessível por apache.
+
