@@ -22,9 +22,10 @@ Repositório para a disciplina de Projeto Integrador I de Sistemas de Informaç�
 #### Instalação npm
 
 1. Clone este repositório.
-2. cd até o diretório.
+2. cd path/to/noponto
 3. npm install
 4. gulp
+
 
 * OBS: View da tela login.php provisoriamente somente acessível por apache.
 
