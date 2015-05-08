@@ -14,7 +14,7 @@ Repositório para a disciplina de Projeto Integrador I de Sistemas de Informaç�
 * Hercilio Junior (API)
 * Ademar Neto (DESIGNER)
 
-#### Instalação 1
+#### Instalação Apache
 
 1. Clone este repositório.
 2. Acesse com apache.
