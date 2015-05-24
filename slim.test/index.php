@@ -1,23 +1,39 @@
 ﻿<?php
 	const DEBUG = false;
-	// Evita acesso direto a arquivos incluídos
-	const NOPONTO = true;
+	const NOPONTO = true; // Evita acesso direto a arquivos incluídos
+	const CITTAMOBI_API = "http://api.plataforma.cittati.com.br/m3p/js";
 	require_once('banco.php');	
 	require_once('vendor/autoload.php');
-	require_once('../geophp.test/geoPHP/geoPHP.inc');
-
+	require_once('../geophp.test/geoPHP.inc');
+	
 	$app = new \Slim\Slim(array());
 	$app->setName('noponto');
 	
 	if(DEBUG){
-		echo "Versão do GEOS: " . GEOSversion() . "<br>";
-		echo "Versão do geoPHP: " . geoPHP::version() . "<br>";
 		$app->config('debug', true);
+		$app->get('/teste', function () {
+			echo "Versão do GEOS: " . GEOSversion() . "<br>";
+			echo "Versão do geoPHP: " . geoPHP::version() . "<br>";
+			$sql = 	"SELECT * 
+						FROM pontos";
+			$resultado = $GLOBALS["conexao"]->query($sql);
+			echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+		});
 	}
 	
-	//Ponto por ID
+//Pontos [OK]
+	$app->get('/pontos', function () {
+		$sql = "SELECT id_original AS id, ASTEXT(GPS) AS gps, sentido, tipo FROM pontos";
+		$resultado = $GLOBALS["conexao"]->query($sql);
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+	});
+
+//Ponto por ID [OK]
 	$app->get('/ponto/:ponto_id', function ($ponto_id) {
-		$sql = "SELECT id, nome, ASTEXT(GPS) as gps, sentido, tipo FROM pontos WHERE id = " . $ponto_id;
+		$sql = sprintf("SELECT id, nome, ASTEXT(GPS) as gps, sentido, tipo
+					FROM pontos
+					WHERE id_original = %s" , $ponto_id
+				);
 		$resultado = $GLOBALS["conexao"]->query($sql);
 		foreach($resultado as $linha){
 			if(DEBUG) var_dump($linha);
@@ -25,32 +41,54 @@
 		}
 	}) ->conditions(array('ponto_id' => '\d+')); // Validação da entrada
 
-	//Lista de pontos
-	$app->get('/pontos', function () {
-		$sql = "SELECT id, ASTEXT(GPS) as gps, sentido, tipo FROM pontos";
-		$resultado = $GLOBALS["conexao"]->query($sql);
-		foreach($resultado as $linha){
-			if(DEBUG) var_dump($linha);
-			echo json_encode($linha, JSON_UNESCAPED_UNICODE);
-		}
-	});
-
-	//Ponto por ID
-	$app->get('/pontos/linha/:linha_id', function ($linha_id) {
+//Pontos por linha
+	$app->get('/pontos/por-linha/:linha_id', function ($linha_id) {
 		$sql = sprintf(
-					"SELECT ponto_id, ordem_ponto
+					"SELECT ordem_ponto AS ordem, ponto_id AS id
 					FROM  rota_contem_pontos
 					WHERE rota_id = %s
 					ORDER BY ordem_ponto", 
 					$linha_id
 				);
 		$resultado = $GLOBALS["conexao"]->query($sql);
-		foreach($resultado as $linha){
-			if(DEBUG) var_dump($linha);
-			echo json_encode($linha, JSON_UNESCAPED_UNICODE);
-		}
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+	}) ->conditions(array('linha_id' => '\d+')); // Validação da entrada
+	
+//Linhas
+	$app->get('/linhas', function () {
+		$sql = "SELECT * FROM  rotas";
+		$resultado = $GLOBALS["conexao"]->query($sql);
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+	});
+
+//Linha por ID
+	$app->get('/linha/:linha_id', function ($linha_id) {
+		$sql = sprintf(
+					"SELECT *
+					FROM  rotas
+					WHERE id_original = %s", 
+					$linha_id
+				);
+		$resultado = $GLOBALS["conexao"]->query($sql);
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
 	}) ->conditions(array('linha_id' => '\d+')); // Validação da entrada
 
-	
+// Linhas por ponto
+	$app->get('/linhas/por-ponto/:ponto_id', function ($ponto_id) {
+		$sql = sprintf(
+					"SELECT rota_id AS rota
+					FROM  rota_contem_pontos
+					WHERE ponto_id = %s", 
+					$ponto_id
+				);
+		$resultado = $GLOBALS["conexao"]->query($sql);
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+	}) ->conditions(array('ponto_id' => '\d+')); // Validação da entrada
+
+// Ônibus por linha
+	$app->get('/onibus/por-linha/:linha_id', function ($linha_id) {
+		echo file_get_contents(CITTAMOBI_API . '/vehicles/service/' . $linha_id);
+	}) ->conditions(array('linha_id' => '\d+')); // Validação da entrada;
+
 	$app->run();
 ?>
