@@ -1,0 +1,3 @@
+[submodule "geoPHP"]
+	path = geophp.test
+	url = https://github.com/phayes/geoPHP.git

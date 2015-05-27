@@ -8,7 +8,7 @@
 	
 	$app = new \Slim\Slim(array());
 	$app->setName('noponto');
-	
+
 	if(DEBUG){
 		$app->config('debug', true);
 		$app->get('/teste', function () {
@@ -35,10 +35,7 @@
 					WHERE id_original = %s" , $ponto_id
 				);
 		$resultado = $GLOBALS["conexao"]->query($sql);
-		foreach($resultado as $linha){
-			if(DEBUG) var_dump($linha);
-			echo json_encode($linha, JSON_UNESCAPED_UNICODE);
-		}
+		echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
 	}) ->conditions(array('ponto_id' => '\d+')); // Validação da entrada
 
 //Pontos por linha
@@ -90,5 +87,21 @@
 		echo file_get_contents(CITTAMOBI_API . '/vehicles/service/' . $linha_id);
 	}) ->conditions(array('linha_id' => '\d+')); // Validação da entrada;
 
+// Como chegar - versão inicial:
+// Condições: origem e destino devem estar na mesma linha e no mesmo sentido (ida ou volta)
+// Retorna o ID da rota
+	
+	$app->get('/como-chegar/:pontoOrigem/:pontoDestino',
+		function ($pontoOrigem, $pontoDestino) {
+			$sql = sprintf(
+						"SELECT rota_id FROM  rota_contem_pontos 
+						WHERE ponto_id = %s OR ponto_id = %s 
+						HAVING COUNT( rota_id ) > 1", 
+						$pontoOrigem, $pontoDestino
+					);
+			$resultado = $GLOBALS["conexao"]->query($sql);
+			echo json_encode($resultado->fetchAll(), JSON_UNESCAPED_UNICODE);
+		}) ->conditions(array('ponto_id' => '\d+')); // Validação da entrada
+	
 	$app->run();
 ?>
