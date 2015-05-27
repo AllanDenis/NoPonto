@@ -1,3 +1,6 @@
 [submodule "geoPHP"]
 	path = geophp.test
 	url = https://github.com/phayes/geoPHP.git
+[submodule "bootleaf"]
+	path = bootleaf
+	url = https://github.com/bmcbride/bootleaf.git
