@@ -1,4 +1,5 @@
 ﻿<?php
+	phpinfo();
 	const DEBUG = false;
 	const NOPONTO = true; // Evita acesso direto a arquivos incluídos
 	const CITTAMOBI_API = "http://api.plataforma.cittati.com.br/m3p/js";
@@ -90,7 +91,6 @@
 // Como chegar - versão inicial:
 // Condições: origem e destino devem estar na mesma linha e no mesmo sentido (ida ou volta)
 // Retorna o ID da rota
-	
 	$app->get('/como-chegar/:pontoOrigem/:pontoDestino',
 		function ($pontoOrigem, $pontoDestino) {
 			$sql = sprintf(

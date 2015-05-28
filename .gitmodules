@@ -2,5 +2,8 @@
 	path = geophp.test
 	url = https://github.com/phayes/geoPHP.git
 [submodule "bootleaf"]
-	path = bootleaf
+	path = bootleaf.test
 	url = https://github.com/bmcbride/bootleaf.git
+[submodule "geojson"]
+	path = geojson
+	url = https://github.com/jmikola/geojson.git
