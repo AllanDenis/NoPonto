@@ -59,7 +59,7 @@ if (DEBUG) {
 			);
 		}
 		$geojson = json_encode ( $geojson, JSON_UNESCAPED_UNICODE );
-		echo '{}';//$geojson;
+		echo $geojson;
 		// echo "<title>Debug</title>";
 		// echo "<h2>Versão do GEOS: " . GEOSversion() . "</h2><br>";
 		// echo "<h2>Versão do geoPHP: " . geoPHP::version() . "</h2><br>";
