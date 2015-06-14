@@ -1,53 +1,194 @@
 /**================================================
-JS : CUSTOM SCRIPTS
+JS : CUSTOM SCRIPTS NOPONTO
 ===================================================*/
 
-var map, marker, myLatlng, mapOptions, geoCoder, currentLoc, searchBtn;
+/* @@@@@@@@@@ BD NOPONTO DESIGN3 @@@@@@@@@@ */
 
-//Search component
-var Searchbar = React.createClass({
-  
-  //Search click event
-  getAddress: function(event) {
-    
-    //Get address from input
-    var address = document.getElementById('search-input').value;
+var geocoder,
+    map,
+    marker,
+    myLatlng,
+    directionsDisplay,
+    directionsService = new google.maps.DirectionsService();
 
-    //If no address is entered, display an alert and return;
-    if (address === '') {
-      alert('Entre com um local e clique em pesquisar...');
-      return;
-    }
-      
-    //Use address and add a marker to the searched address
-    geocoder.geocode( { 'address': address}, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-        
-        //Remove previously added marker
-        if (marker) {
-          marker.setMap(null);
-        }
+// ################# INIT MAP #####################
 
-        map.setCenter(results[0].geometry.location);
-        
-        marker = new google.maps.Marker({
-            map: map,
-            zoom: 15,
-            position: results[0].geometry.location
-        });
-      } 
-      else {
-        alert('Não foi possível encontrar esse local, tente novamente...');
+function initialize() {
+  directionsDisplay = new google.maps.DirectionsRenderer();
+  var latlng = new google.maps.LatLng(-9.6651146, -35.7306113);
+  var options = {
+    zoom: 16,
+    center: latlng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+
+  map = new google.maps.Map(document.getElementById("mapa"), options);
+
+  geocoder = new google.maps.Geocoder();
+
+  marker = new google.maps.Marker({
+    map: map,
+    draggable: true,
+  });
+
+  marker.setPosition(latlng);
+  directionsDisplay.setMap(map);
+}
+
+initialize();
+
+// ################# CALC ROUTES #####################
+
+function calcRoute() {
+  var start = document.getElementById('start').value,
+      end = document.getElementById('end').value;
+
+  var request = {
+      origin:start,
+      destination:end,
+      travelMode: google.maps.TravelMode.DRIVING
+  };
+
+  if (start == "" || end == "") {
+    document.getElementById("msgDiv").innerHTML = ''+
+    '<div class="alert alert-danger">'+
+      '<a href="#" class="close" data-dismiss="alert">&times;</a>'+
+      '<strong>Erro!</strong> Entre com os dois campos preenchidos!'+
+    '</div>'+
+    '';
+  } else {
+    directionsService.route(request, function(response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        directionsDisplay.setDirections(response);
+        console.log(response);
       }
     });
-  },
+  };
+};
 
-  //Current location click event
-  getCurrentLocation: function() {
-    
+// ################# LINES #####################
+
+function calcLines() {
+  var line = document.getElementById('line').value,
+      breakString = line.split("/"),
+      startLine = breakString[0],
+      endLine = breakString[1];
+
+  var request = {
+      origin:startLine,
+      destination:endLine,
+      travelMode: google.maps.TravelMode.DRIVING
+  };
+
+  if (startLine == "" || endLine == "") {
+    document.getElementById("msgDiv").innerHTML = ''+
+    '<div class="alert alert-danger">'+
+      '<a href="#" class="close" data-dismiss="alert">&times;</a>'+
+      '<strong>Erro!</strong> Entre com os dois campos preenchidos!'+
+    '</div>'+
+    '';
+  } else {
+    directionsService.route(request, function(response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        directionsDisplay.setDirections(response);
+        console.log(response);
+      }
+    });
+  };
+};
+
+// ################# GET ADDRESS #####################
+
+function getAddress() {
+
+  //Get address from input
+  var address = document.getElementById('txtEndereco').value;
+
+  //If no address is entered, display an alert and return;
+  if (address === '') {
+    alert('Entre com um local e clique em pesquisar...');
+    return;
+  }
+
+  //Use address and add a marker to the searched address
+  geocoder.geocode( { 'address': address}, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+
+      //Remove previously added marker
+      if (marker) {
+        marker.setMap(null);
+      }
+
+      map.setCenter(results[0].geometry.location);
+
+      marker = new google.maps.Marker({
+          map: map,
+          zoom: 15,
+          position: results[0].geometry.location
+      });
+    }
+    else {
+      alert('Não foi possível encontrar esse local, tente novamente...');
+    }
+  });
+};
+
+/// ################# AUTOCOMPLETE #####################
+
+var searchBar = document.getElementById('txtEndereco');
+
+var autocomplete = new google.maps.places.Autocomplete(searchBar);
+autocomplete.bindTo('bounds', map); //Binding autocomplete
+
+//On click of autocomplete search, add marker to palce
+google.maps.event.addListener(autocomplete, 'place_changed', function(event) {
+
+  marker.setVisible(false);//set marker to not visible
+
+  //Selected place
+  var place = autocomplete.getPlace();
+
+  if (marker) {
+    marker.setMap(null);
+  }
+
+  //Adding marker to the selected location
+  var position = new google.maps.LatLng(place.geometry.location.A, place.geometry.location.F);
+
+  //Marker
+  marker = new google.maps.Marker({
+    map: map,
+    zoom: 25,
+    position: position
+  });
+
+  map.setZoom(17);
+  map.setCenter(marker.getPosition());
+
+  marker.setVisible(true); //Set marker to visible
+});
+
+
+// ------------------- AUTOCOMPLETE START ----------------------
+var searchBarA = document.getElementById('start');
+console.log(searchBarA);
+
+var autocompleteA = new google.maps.places.Autocomplete(searchBarA);
+autocompleteA.bindTo('bounds', map);
+
+// ------------------- AUTOCOMPLETE END ------------------------
+var searchBarB = document.getElementById('end');
+
+var autocompleteB = new google.maps.places.Autocomplete(searchBarB);
+autocompleteB.bindTo('bounds', map);
+
+// ################# Current Position #####################
+
+function getCurrentLocation() {
+
     //If brower supports HTML5 geoLocation
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) { 
+      navigator.geolocation.getCurrentPosition(function(position) {
         var lat = position.coords.latitude;
         var lng = position.coords.longitude;
 
@@ -58,7 +199,7 @@ var Searchbar = React.createClass({
           marker.setMap(null);
         }
 
-        var popupContent = '<div id="content"><h3 id="firstHeading" class="heading">Sua localização</h1></div>'
+        var popupContent = '<div id="content"><h5 id="firstHeading" class="heading">Sua localização!</h5></div>'
 
         var infowindow = new google.maps.InfoWindow({
           content: popupContent
@@ -68,131 +209,98 @@ var Searchbar = React.createClass({
 
         marker = new google.maps.Marker({
             map: map,
-            zoom: 15,
+            zoom: 16,
             position: currentLoc
         });
 
         infowindow.open(map,marker);
       });
-        
+
     }
     else {
       alert('Este browser não suporta HTML5 geolocation');
     }
-  },
-  
-  //Render search input, search btn, current location image
-  render: function() {
-    return (
-      <div>
-        <div className="bar-top"></div>
-        <div className="container">
-          <h1>
-            <img src="images/noponto-logo.png" className="logo" />
-          </h1>
-  
-          <div className="input-group margin-board">
-                <input type="text" id="search-input" className="form-control" placeholder="Digite um local..." />
-                <span className="input-group-btn">
-                  <button className="btn btn-info" id="search" onClick={this.getAddress}> Ir </button>
-                </span>
-          </div>
-          
-          <button type="button" id="search" className="btn btn-success" onClick={this.getCurrentLocation}>
-            <span className="glyphicon glyphicon-screenshot current-location" aria-hidden="true"></span>
-          </button>
-      
-        </div>
-      </div>
-    );
-  }
-});
+  };
 
-//Google maps component
-var Gmaps = React.createClass({
 
-  //Render search input
-  render: function() {
-    return (
-      <div id="map"></div>
-    );
-  }
-});
+// ################# LOAD PONTOS #####################
 
-//All Components  combined to load in the index page
-var App = React.createClass({
+function loadPontos() {
 
-  //After Gmaps component is rendered, call this function to bind google maps
-  componentDidMount: function() {
-    
-    //Initializing geoCoder
-    geocoder = new google.maps.Geocoder();
+    $.ajax({
+              //url : "../index.php/pontos",
+              //url : "../teste.php",
+              url : "data/noponto-estaticos.json",
+              dataType : "json",
+              success : function(data){
+                console.log("Sucesso!");
+                //document.write(pontos);
 
-    //Some random lanLng
-    myLatlng = new google.maps.LatLng(-9.66433, -35.72968);
+                map.data.loadGeoJson("data/noponto-estaticos.json");
 
-    //Map option
-    mapOptions = {
-      zoom: 15,
-      center: myLatlng
-    };
+                map.data.setStyle({
+                  fillColor: 'blue',
+                  position: myLatlng,
+                  map: map,
+                  title: 'location',
+                  icon: 'images/bus2.png'
+                });
 
-    //Render google maps in #map container
-    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+                var infowindow = new google.maps.InfoWindow();
 
-    //Adding maker to maps
-    marker = new google.maps.Marker({
-      position: myLatlng,
-      map: map,
-      title: 'location'
-    });
+                map.data.addListener('click', function(event) {
+                  infowindow.setContent("<div><h6>Ponto de ônibus</h6>"+
+                                          '<div class="define-width-list"></div>'+
+                                          '<div class="list-group">'+
+                                            '<a href="#" class="list-group-item active">'+
+                                              'Linhas'+
+                                            '</a>'+
+                                            '<div class="list-group-item">'+
+                                              '<div class="status-bus-next">'+
+                                                '<span><b>Próximo</b></span>'+
+                                              '</div>'+
+                                              '<span><b>- Feitosa X Centro / Farol</b></span>'+
+                                            '</div>'+
+                                            '<div class="list-group-item">'+
+                                              '<div class="status-bus-min">'+
+                                                '<span><b>12 min</b></span>'+
+                                              '</div>'+
+                                              '<span><b>- Jose Tenorio / Iguatemi</b></span>'+
+                                            '</div>'+
+                                            '<div class="list-group-item">'+
+                                              '<div class="status-bus-min">'+
+                                                '<span><b>20 min</b></span>'+
+                                              '</div>'+
+                                              '<span><b>- Sanatorio / Sinimbu</b></span>'+
+                                            '</div>'+
+                                          '</div>'+
+                                        "</div>");
+                  infowindow.setPosition(event.feature.getGeometry().get());
+                  infowindow.open(map, this.marker);
 
-    var searchBar = document.getElementById('search-input');
+                  $.each(data, function(key, val) {
+                    //console.log(key);
+                    console.log(val);
+                  });
 
-    //Adding autocomplete to search bar
-    var autocomplete = new google.maps.places.Autocomplete(searchBar);
-    autocomplete.bindTo('bounds', map); //Binding autocomplete
+                  //console.log(map.data.properties.features.id);
+                });
 
-    //On click of autocomplete search, add marker to palce
-    google.maps.event.addListener(autocomplete, 'place_changed', function(event) {
-      
-      marker.setVisible(false);//set marker to not visible
-      
-      //Selected place
-      var place = autocomplete.getPlace();
+              },
 
-      if (marker) {
-        marker.setMap(null);
-      }
+              error: function(XMLHttpRequest, textStatus, errorThrown){
+                console.log("Erro!");
+                console.log(XMLHttpRequest);
+                console.log(XMLHttpRequest.responseText);
+                //document.write(XMLHttpRequest.responseText)
+                //console.log(JSON.stringify(XMLHttpRequest, null, 4));
+                console.log(textStatus);
+                console.log(errorThrown);
+              }
 
-      //Adding marker to the selected location
-      var position = new google.maps.LatLng(place.geometry.location.A, place.geometry.location.F);
+    });//ajax
 
-      //Marker
-      marker = new google.maps.Marker({
-        map: map,
-        zoom: 25,
-        position: position
-      });
+}
 
-      map.setZoom(17);
-      map.setCenter(marker.getPosition());
-      
-      marker.setVisible(true); //Set marker to visible
-    });
+loadPontos();
 
-  },
-  
-  //Render google maps and search bar in page
-  render : function() {
-    return (
-      <div>
-        <Searchbar />
-        <Gmaps />
-      </div> 
-    )
-  }
-});
-
-//Set rendering targer as #main-container
-React.render(<App />, document.getElementById('main-container'));
