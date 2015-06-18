@@ -1,19 +1,18 @@
 ﻿<?php
-	const DEBUG = false;
+	const DEBUG = true;
 	const NOPONTO = true; // Evita acesso direto a arquivos incluídos
 	const CITTAMOBI_API = "http://api.plataforma.cittati.com.br/m3p/js";
 	require_once('banco.php');	
 	require_once('vendor/autoload.php');
 	require_once('../geophp.test/geoPHP.inc');
-	
 	$app = new \Slim\Slim(array());
 	$app->setName('noponto');
 
 	if(DEBUG){
 		$app->config('debug', true);
 		$app->get('/teste', function () {
-			echo "Versão do GEOS: " . GEOSversion() . "<br>";
-			echo "Versão do geoPHP: " . geoPHP::version() . "<br>";
+			echo "<script>console.log('Versão do GEOS: " . GEOSversion() . "');</script>";
+			echo "<script>console.log('Versão do geoPHP: " . geoPHP::version() . "');</script>";
 			$sql = 	"SELECT * 
 						FROM pontos";
 			$resultado = $GLOBALS["conexao"]->query($sql);
