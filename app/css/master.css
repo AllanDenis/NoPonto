@@ -48,30 +48,51 @@ SMACSS: VARIABLES
 SMACSS: BASE
 -------------------------------------------------*/
 body {
-  background: #fcf8ee; }
+  background-color: #000; }
 
-.bar-top {
+.mapas {
   width: 100%;
-  height: 10px;
-  background-color: #2a97fd; }
+  height: 590px;
+  margin-top: -20px; }
 
-#map {
-  margin-top: 30px;
-  width: 100%;
-  height: 450px;
-  min-height: 250px; }
-
-.margin-board {
-  margin-bottom: 10px; }
+.logo {
+  margin-top: -10px; }
 
 .current-location {
-  font-size: 20px; }
+  margin-left: 5px; }
 
-#content {
-  width: 206px;
-  overflow: hidden;
-  font-size: 16px;
-  font-weight: 500; }
+.pac-container {
+  z-index: 1051 !important; }
+
+.define-width-list {
+  max-width: 600px;
+  height: 20px; }
+
+.status-bus-next {
+  width: 100px;
+  height: 30px;
+  padding-top: 6px;
+  background-color: blue;
+  border-radius: 5px;
+  display: inline-block; }
+
+.status-bus-next span {
+  margin-left: 25px;
+  color: #ffffff;
+  border-radius: 5px; }
+
+.status-bus-min {
+  width: 100px;
+  height: 30px;
+  padding-top: 6px;
+  background-color: green;
+  border-radius: 5px;
+  display: inline-block; }
+
+.status-bus-min span {
+  margin-left: 25px;
+  color: #ffffff;
+  border-radius: 5px; }
 
 .form-signin {
   max-width: 330px;

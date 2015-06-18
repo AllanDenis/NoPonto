@@ -18,14 +18,11 @@ Repositório para a disciplina de Projeto Integrador I de Sistemas de Informaç�
 ```sh
 1. Clone este repositório.
 2. Acesse com apache.
+3. NoPonto/app
 ```
 #### Instalação npm
 ```sh
-1. Clone este repositório.
-2. cd path/to/noponto
-3. npm install
-4. gulp
+
 ```
 
-* OBS: View da tela login.php provisoriamente somente acessível por apache.
 
