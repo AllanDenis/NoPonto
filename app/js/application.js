@@ -49,6 +49,11 @@ function calcRoute() {
       travelMode: google.maps.TravelMode.DRIVING
   };
 
+  //remover rotas existentes
+  if (directionsDisplay) {
+    directionsDisplay.setMap(null);
+  }
+
   if (start == "" || end == "") {
     document.getElementById("msgDiv").innerHTML = ''+
     '<div class="alert alert-danger">'+
@@ -59,7 +64,9 @@ function calcRoute() {
   } else {
     directionsService.route(request, function(response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
-        directionsDisplay.setDirections(response);
+        this.directionsDisplay = new google.maps.DirectionsRenderer();
+        this.directionsDisplay.setDirections(response);
+        this.directionsDisplay.setMap(map);
         console.log(response);
       }
     });
@@ -70,15 +77,35 @@ function calcRoute() {
 
 function calcLines() {
   var line = document.getElementById('line').value,
+      lineText = document.getElementById('line'),
       breakString = line.split("/"),
       startLine = breakString[0],
       endLine = breakString[1];
 
+  var directionLine = lineText.options[lineText.selectedIndex].text;
+
   var request = {
-      origin:startLine,
-      destination:endLine,
-      travelMode: google.maps.TravelMode.DRIVING
+        origin:startLine,
+        destination:endLine,
+        travelMode: google.maps.TravelMode.DRIVING
   };
+
+  var polylineOptionsIda = new google.maps.Polyline({
+        strokeColor: 'green',
+        strokeOpacity: 1.0,
+        strokeWeight: 10
+  });
+
+  var polylineOptionsVolta = new google.maps.Polyline({
+        strokeColor: 'red',
+        strokeOpacity: 1.0,
+        strokeWeight: 10
+  });
+
+  //remover rotas existentes
+  if (directionsDisplay) {
+    directionsDisplay.setMap(null);
+  }
 
   if (startLine == "" || endLine == "") {
     document.getElementById("msgDiv").innerHTML = ''+
@@ -90,8 +117,18 @@ function calcLines() {
   } else {
     directionsService.route(request, function(response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
-        directionsDisplay.setDirections(response);
-        console.log(response);
+        if (directionLine.match(/IDA/)) {
+          this.directionsDisplay = new google.maps.DirectionsRenderer({polylineOptions: polylineOptionsIda});
+          this.directionsDisplay.setMap(map);
+          this.directionsDisplay.setDirections(response);
+          console.log(response);
+        }
+        else {
+          this.directionsDisplay = new google.maps.DirectionsRenderer({polylineOptions: polylineOptionsVolta});
+          this.directionsDisplay.setMap(map);
+          this.directionsDisplay.setDirections(response);
+          console.log(response);
+        }
       }
     });
   };
@@ -101,20 +138,17 @@ function calcLines() {
 
 function getAddress() {
 
-  //Get address from input
   var address = document.getElementById('txtEndereco').value;
 
-  //If no address is entered, display an alert and return;
   if (address === '') {
     alert('Entre com um local e clique em pesquisar...');
     return;
   }
 
-  //Use address and add a marker to the searched address
   geocoder.geocode( { 'address': address}, function(results, status) {
     if (status == google.maps.GeocoderStatus.OK) {
 
-      //Remove previously added marker
+      //Remove marcador existente
       if (marker) {
         marker.setMap(null);
       }
@@ -138,24 +172,23 @@ function getAddress() {
 var searchBar = document.getElementById('txtEndereco');
 
 var autocomplete = new google.maps.places.Autocomplete(searchBar);
-autocomplete.bindTo('bounds', map); //Binding autocomplete
+autocomplete.bindTo('bounds', map);
 
-//On click of autocomplete search, add marker to palce
+
 google.maps.event.addListener(autocomplete, 'place_changed', function(event) {
 
-  marker.setVisible(false);//set marker to not visible
+  marker.setVisible(false);
 
-  //Selected place
   var place = autocomplete.getPlace();
 
+  //Remove marcador existente
   if (marker) {
     marker.setMap(null);
   }
 
-  //Adding marker to the selected location
   var position = new google.maps.LatLng(place.geometry.location.A, place.geometry.location.F);
 
-  //Marker
+
   marker = new google.maps.Marker({
     map: map,
     zoom: 25,
@@ -165,7 +198,7 @@ google.maps.event.addListener(autocomplete, 'place_changed', function(event) {
   map.setZoom(17);
   map.setCenter(marker.getPosition());
 
-  marker.setVisible(true); //Set marker to visible
+  marker.setVisible(true);
 });
 
 
@@ -186,7 +219,7 @@ autocompleteB.bindTo('bounds', map);
 
 function getCurrentLocation() {
 
-    //If brower supports HTML5 geoLocation
+    //Verificar HTML5 geoLocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(position) {
         var lat = position.coords.latitude;
@@ -194,7 +227,7 @@ function getCurrentLocation() {
 
         currentLoc = new google.maps.LatLng(lat, lng);
 
-        //Remove previously added marker
+        //Remove marcador existente
         if (marker) {
           marker.setMap(null);
         }
@@ -205,7 +238,7 @@ function getCurrentLocation() {
           content: popupContent
         });
 
-        map.setCenter(currentLoc);//Set the map to center of location
+        map.setCenter(currentLoc);
 
         marker = new google.maps.Marker({
             map: map,
@@ -228,15 +261,17 @@ function getCurrentLocation() {
 function loadPontos() {
 
     $.ajax({
-              //url : "../index.php/pontos",
+              //url : "../slim.test/index.php/pontos",
               //url : "../teste.php",
               url : "data/noponto-estaticos.json",
+              //contentType: "application/json",
               dataType : "json",
               success : function(data){
                 console.log("Sucesso!");
-                //document.write(pontos);
+                console.log(data);
 
                 map.data.loadGeoJson("data/noponto-estaticos.json");
+                //map.data.loadGeoJson("data/noponto-estaticos.json");
 
                 map.data.setStyle({
                   fillColor: 'blue',
@@ -303,4 +338,3 @@ function loadPontos() {
 }
 
 loadPontos();
-
