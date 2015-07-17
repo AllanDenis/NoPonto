@@ -9,6 +9,7 @@ var geocoder,
     marker,
     myLatlng,
     directionsDisplay,
+    zoomLevel,
     directionsService = new google.maps.DirectionsService();
 
 // ################# INIT MAP #####################
@@ -28,7 +29,7 @@ function initialize() {
 
   marker = new google.maps.Marker({
     map: map,
-    draggable: true,
+    draggable: false,
   });
 
   marker.setPosition(latlng);
@@ -46,7 +47,7 @@ function calcRoute() {
   var request = {
       origin:start,
       destination:end,
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode: google.maps.TravelMode.DRIVING,
   };
 
   //remover rotas existentes
@@ -141,7 +142,7 @@ function getAddress() {
   var address = document.getElementById('txtEndereco').value;
 
   if (address === '') {
-    alert('Entre com um local e clique em pesquisar...');
+    alert('Entre com um local e clique em Ir...');
     return;
   }
 
@@ -226,7 +227,6 @@ function getCurrentLocation() {
         var lng = position.coords.longitude;
 
         currentLoc = new google.maps.LatLng(lat, lng);
-
         //Remove marcador existente
         if (marker) {
           marker.setMap(null);
@@ -261,7 +261,7 @@ function getCurrentLocation() {
 function loadPontos() {
 
     $.ajax({
-              //url : "../slim.test/index.php/pontos",
+              //url : "../api/index.php/pontos",
               //url : "../teste.php",
               url : "data/noponto-estaticos.json",
               //contentType: "application/json",
@@ -274,17 +274,49 @@ function loadPontos() {
                 //map.data.loadGeoJson("data/noponto-estaticos.json");
 
                 map.data.setStyle({
-                  fillColor: 'blue',
-                  position: myLatlng,
-                  map: map,
-                  title: 'location',
-                  icon: 'images/bus2.png'
+                                    fillColor: 'blue',
+                                    position: myLatlng,
+                                    map: map,
+                                    title: 'location',
+                                    icon: 'images/bus2.png'
+                                  });
+
+                // Marker hide/show
+                google.maps.event.addListener(map, 'zoom_changed', function() {
+                  zoomLevel = map.getZoom();
+                  console.log(zoomLevel);
+
+                  if (zoomLevel < 15) {
+                      map.data.setStyle.visible = false;
+                      console.log(map.data.setStyle.visible);
+                      map.data.setStyle({
+                                          fillColor: 'blue',
+                                          position: myLatlng,
+                                          map: map,
+                                          title: 'location',
+                                          icon: 'images/bus2.png',
+                                          visible: false
+                                        });
+                  }
+                  else {
+                      map.data.setStyle.visible = true;
+                      console.log(map.data.setStyle.visible);
+                      map.data.setStyle({
+                                          fillColor: 'blue',
+                                          position: myLatlng,
+                                          map: map,
+                                          title: 'location',
+                                          icon: 'images/bus2.png',
+                                          visible: true
+                                        });
+                  }
                 });
 
                 var infowindow = new google.maps.InfoWindow();
 
                 map.data.addListener('click', function(event) {
-                  infowindow.setContent("<div><h6>Ponto de ônibus</h6>"+
+                  infowindow.setContent("<div><b><h4>Ponto de ônibus</b></h6>"+
+                                          '<h6>Status: <b>Cheio</b></h6>'+
                                           '<div class="define-width-list"></div>'+
                                           '<div class="list-group">'+
                                             '<a href="#" class="list-group-item active">'+
@@ -298,13 +330,13 @@ function loadPontos() {
                                             '</div>'+
                                             '<div class="list-group-item">'+
                                               '<div class="status-bus-min">'+
-                                                '<span><b>12 min</b></span>'+
+                                                '<span><b>22:12</b></span>'+
                                               '</div>'+
                                               '<span><b>- Jose Tenorio / Iguatemi</b></span>'+
                                             '</div>'+
                                             '<div class="list-group-item">'+
                                               '<div class="status-bus-min">'+
-                                                '<span><b>20 min</b></span>'+
+                                                '<span><b>22:30</b></span>'+
                                               '</div>'+
                                               '<span><b>- Sanatorio / Sinimbu</b></span>'+
                                             '</div>'+
@@ -314,10 +346,8 @@ function loadPontos() {
                   infowindow.open(map, this.marker);
 
                   $.each(data, function(key, val) {
-                    //console.log(key);
                     console.log(val);
                   });
-
                   //console.log(map.data.properties.features.id);
                 });
 
@@ -327,13 +357,11 @@ function loadPontos() {
                 console.log("Erro!");
                 console.log(XMLHttpRequest);
                 console.log(XMLHttpRequest.responseText);
-                //document.write(XMLHttpRequest.responseText)
-                //console.log(JSON.stringify(XMLHttpRequest, null, 4));
                 console.log(textStatus);
                 console.log(errorThrown);
               }
 
-    });//ajax
+    });
 
 }
 
