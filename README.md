@@ -20,7 +20,7 @@ Repositório para a disciplina de Projeto Integrador I de Sistemas de Informaç�
 2. Acesse com apache.
 3. NoPonto/app
 ```
-#### Instalação npm
+#### 
 ```sh
 
 ```
