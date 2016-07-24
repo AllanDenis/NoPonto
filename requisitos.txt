@@ -1,2 +1,10 @@
+click==6.6
+psycopg-postgis==0.1.2
+psycopg2==2.6.2
 py==1.4.31
+pyaes==1.6.0
+pyDAL==16.6.28
 pytest==2.9.2
+PyYAML==3.11
+selenium==2.53.6
+weppy==0.7.6
