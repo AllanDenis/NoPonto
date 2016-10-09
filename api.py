@@ -1,16 +1,18 @@
 DEBUG = True
 import urllib
-from time import time
 import re
 import xmltodict
 from pprint import pprint
 
+URL_LINHAS = 'http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap'
+ID_SMTT = 415
+
 def pegaLinhasXml():
-    linhas = urllib.request.urlopen('http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap')
+    linhas = urllib.request.urlopen(URL_LINHAS)
     sessao = re.findall(r'[0-9A-F]{32}', linhas.geturl())[0]
-    linhas = urllib.request.urlopen(
-                'http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap;'
-                + 'jsessionid=%s?0-1.IBehaviorListener.0-mapPanel&out=false&ta=415' % sessao)
+    linhas = urllib.request.urlopen(URL_LINHAS
+                                    +';jsessionid=%s?0-1.IBehaviorListener.0-mapPanel&out=false&ta=%d'
+                                     % (sessao, ID_SMTT))
     return str(linhas.read())
 
 
@@ -19,7 +21,7 @@ def linhas():
     linhasXml = pegaLinhasXml()
 
     if DEBUG: print("Tratando dados...")
-    linhasXml = re.sub(r'(<!\[CDATA\[)|(\]\])|(--)','',linhasXml)
+    linhasXml = re.sub(r'(--)','',linhasXml)
     linhasXml = re.sub(r'\n\t?','#',linhasXml)
     linhasXml = re.sub(r'optgroup','linha',linhasXml)
     linhasXml = re.sub(r'option','viagens',linhasXml)
