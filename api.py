@@ -3,6 +3,9 @@ import urllib
 import re
 import xmltodict
 from pprint import pprint
+from time import time
+
+inicio = time()
 
 URL_LINHAS = 'http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap'
 ID_SMTT = 415
@@ -17,19 +20,20 @@ def pegaLinhasXml():
 
 
 def linhas():
-    if DEBUG: print("Carregando linhas...")
-    linhasXml = pegaLinhasXml()
-
+    linhasXml = []
+    while len(linhasXml) == 0:
+        if DEBUG: print("Carregando linhas...")
+        linhasXml = pegaLinhasXml()
+        linhasXml = re.sub(r'(--)','',linhasXml)
+        linhasXml = re.sub(r'\n\t?','#',linhasXml)
+        linhasXml = re.sub(r'optgroup','linha',linhasXml)
+        linhasXml = re.sub(r'option','viagens',linhasXml)
+        linhasXml = re.sub(r'\( +','(',linhasXml)
+        linhasXml = re.sub(r'\) +',')',linhasXml)
+        linhasXml = re.sub(r'( +[xX/] +)',' / ',linhasXml)
+        filtro = re.compile(r'<linha.*/linha>')
+        linhasXml = re.findall(filtro,linhasXml)
     if DEBUG: print("Tratando dados...")
-    linhasXml = re.sub(r'(--)','',linhasXml)
-    linhasXml = re.sub(r'\n\t?','#',linhasXml)
-    linhasXml = re.sub(r'optgroup','linha',linhasXml)
-    linhasXml = re.sub(r'option','viagens',linhasXml)
-    linhasXml = re.sub(r'\( +','(',linhasXml)
-    linhasXml = re.sub(r'\) +',')',linhasXml)
-    linhasXml = re.sub(r'( +[xX/] +)',' / ',linhasXml)
-    filtro = re.compile(r'<linha.*/linha>')
-    linhasXml = re.findall(filtro,linhasXml)
     linhasXml = linhasXml[0].split('#')
     linhasXml = '<xml>\n'+'\n'.join(linhasXml)+'\n</xml>'
 
@@ -45,7 +49,7 @@ def linhas():
             viagem['direcao'] = nome[-1].lower()
             print('\t' + viagem['direcao'] + '\t', viagem['nome-viagem'])
 
-    print(len(linhas), 'linhas')
+    print('%d linhas (%d s)' % (len(linhas), time()-inicio))
 
 
 if __name__ == '__main__':
