@@ -1,13 +1,14 @@
 DEBUG = True
-import json, re, urllib, xmltodict
+import json, re, threading, urllib, xmltodict
 from pprint import pprint
 from time import time
+from multiprocessing.pool import ThreadPool as Pool
 
 inicio = time()
 API_CITTAMOBI = 'http://api.plataforma.cittati.com.br/m3p/js'
 URL_LINHAS = 'http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap'
 ID_SMTT = 415
-
+i = 0
 
 
 def pegaLinhas():
@@ -44,10 +45,7 @@ def pegaLinhas():
     if DEBUG: print("Extraindo dados...")
     linhas = xmltodict.parse(linhasXml)['xml']['linha']
     viagens = {}
-    i = 0
-    totalLinhas = len(linhas)
     for linha in linhas:
-        i += 1
         linha['numero'] = re.findall(r'\d{2,}', linha['@label'])[0]
         linha['nome'] = linha.pop('@label')
         # print(len(linha['viagens']), linha['nome'])
@@ -60,11 +58,27 @@ def pegaLinhas():
                 'nome' : re.sub(r'(\ *\-\ *)(IDA|VOLTA)', '', nome),
                 'linha' : linha['nome'],
                 'numero' : linha['numero'],})
-            # if DEBUG:
-            #     print("%d/%d\tCarregando veículos:" % (i, totalLinhas),
-            #         viagem['nome'])
-            #         viagem['veiculos'] = pegaVeiculos(viagem['id'])
             viagens[viagem['id']] = dict(viagem)
+    totalViagens = len(viagens)
+    i = 0
+    def worker(viagem):
+        global i
+        try:
+            i += 1
+            viagem['veiculos'] = pegaVeiculos(viagem['id'])
+            print("%.1f%%\t%d veiculos na linha:" % (100*i/totalViagens, len(viagem['veiculos'])), viagem['nome'])
+        except Exception as e:
+            print(e)
+            raise
+
+    pool_size = 50  # your "parallelness"
+    pool = Pool(pool_size)
+    if DEBUG:
+        for n,v in viagens.items():
+            pool.apply_async(worker, (v,))
+            # v['veiculos'] = pegaVeiculos(n)
+        pool.close()
+        pool.join()
 
     if DEBUG: print('%d linhas, %d viagens (em %d s)' % (len(linhas), len(viagens), time()-inicio))
     return viagens
@@ -90,5 +104,5 @@ def pegaVeiculos(idViagem):
 
 if __name__ == '__main__':
     linhas = pegaLinhas()
-    pprint(linhas)
+    # pprint(linhas)
     # pprint(pegaVeiculos(22514))
