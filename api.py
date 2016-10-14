@@ -3,12 +3,14 @@ import json, re, threading, urllib, xmltodict
 from pprint import pprint
 from time import time
 from multiprocessing.pool import ThreadPool as Pool
+from sys import stdout
 
 inicio = time()
 API_CITTAMOBI = 'http://api.plataforma.cittati.com.br/m3p/js'
 URL_LINHAS = 'http://info.plataforma.cittati.com.br/m3p/embedded/predictionMap'
 ID_SMTT = 415
 i = 0
+totalVeiculos = 0
 
 
 def pegaLinhas():
@@ -51,7 +53,6 @@ def pegaLinhas():
         # print(len(linha['viagens']), linha['nome'])
         for viagem in linha['viagens']:
             viagem['id'] = viagem.pop('@value')
-            if linha['numero'] == '797': print(viagem['id'])
             nome = viagem.pop('#text')
             viagem['direcao'] = 'volta' if 'VOLTA' in nome else 'ida'
             viagem.update({
@@ -60,31 +61,42 @@ def pegaLinhas():
                 'numero' : linha['numero'],})
             viagens[viagem['id']] = dict(viagem)
     totalViagens = len(viagens)
-    i = 0
     def worker(viagem):
-        global i
-        try:
-            i += 1
-            viagem['veiculos'] = pegaVeiculos(viagem['id'])
-            print("%.1f%%\t%d veiculos na linha:" % (100*i/totalViagens, len(viagem['veiculos'])), viagem['nome'])
-        except Exception as e:
-            print(e)
-            raise
+        while True:
+            try:
+                global i, totalVeiculos
+                i += 1
+                pegaVeiculos(viagem)
+                numVeiculos = len(viagem['veiculos'])
+                totalVeiculos += numVeiculos
+                status = '%.1f%%\t' % (100*i / totalViagens)
+                status += str(numVeiculos)
+                status += ' veículos na linha '
+                status += '%s ' % ('🡠🡢'[viagem['direcao'] == 'ida'])
+                status += '%s ' % viagem['nome']
+                stdout.write(status.ljust(90) + ('\r' if numVeiculos == 0 else '\n'))
+                break
+            except Exception as e:
+                print(e, ' (Tentando novamente...)')
+                continue
 
-    pool_size = 50  # your "parallelness"
+    pool_size = 20
     pool = Pool(pool_size)
     if DEBUG:
-        for n,v in viagens.items():
-            pool.apply_async(worker, (v,))
-            # v['veiculos'] = pegaVeiculos(n)
+        pool.map_async(worker, viagens.values())
         pool.close()
         pool.join()
 
-    if DEBUG: print('%d linhas, %d viagens (em %d s)' % (len(linhas), len(viagens), time()-inicio))
+    if DEBUG:
+        relatorio = '%d linhas, '   % len(linhas)
+        relatorio += '%d viagens, ' % totalViagens
+        relatorio += '%d veículos agora ' % totalVeiculos
+        relatorio += '(em %d s)' % (time()-inicio)
+        print(relatorio.ljust(90))
     return viagens
 
-def pegaVeiculos(idViagem):
-    URL_VEICULOS = API_CITTAMOBI + '/vehicles/service/' + str(idViagem)
+def pegaVeiculos(viagem):
+    URL_VEICULOS = API_CITTAMOBI + '/vehicles/service/' + viagem['id']
     veiculos = urllib.request.urlopen(URL_VEICULOS)
     veiculos = str(veiculos.read().decode('utf8'))
     veiculos = json.loads(veiculos)
@@ -99,7 +111,7 @@ def pegaVeiculos(idViagem):
     for v in veiculos:
         for original, novo in traducoes.items():
             v[novo] = v.pop(original)
-    return veiculos
+    viagem['veiculos'] = veiculos
 
 
 if __name__ == '__main__':
